@@ -31,20 +31,18 @@ PACKAGE_JSON := $(TOOLS_DIR)/package.json
 REQUIREMENTS_TXT := $(TOOLS_DIR)/requirements.txt
 
 # Répertoires pour BlitzKit StaticProcessor et service direct
-PUBLIC_DIR := $(WEBROOT_DIR)/www     # Destination finale des assets servis (créé/populé par BlitzKit)
+PUBLIC_DIR := $(WEBROOT_DIR)/www     # Destination finale des assets servis (populé par BlitzKit)
 STATICS_DIR := $(WEBROOT_DIR)/statics # Fichiers copiés tels quels par BlitzKit (ex: favicon, htmx.min.js, tailwind.css généré)
 SOURCES_DIR := $(WEBROOT_DIR)/sources   # Fichiers sources à minifier par BlitzKit (ex: app.js)
 
 # Fichier CSS généré par Tailwind, placé dans STATICS_DIR pour être traité par BlitzKit
 OUTPUT_CSS_FILE := $(STATICS_DIR)/tailwind.css
 
-# Cache directory (handled by BlitzKit, but good to be aware of for cleaning if needed manually)
+# Cache directory (handled by BlitzKit)
 CACHE_DIR := $(WEBROOT_DIR)/cache
 
 # Assurer l'existence de certains répertoires essentiels au démarrage du Makefile lui-même
-# Note: PUBLIC_DIR et CACHE_DIR sont gérés par l'application/BlitzKit lors de son exécution.
-# Le Makefile assure juste que les répertoires sources pour les assets existent.
-DUMMY := $(shell mkdir -p $(BIN_DIR) $(STATICS_DIR) $(SOURCES_DIR) $(HEROICONS_DIR) $(TOOLS_DIR))
+DUMMY := $(shell mkdir -p $(BIN_DIR) $(STATICS_DIR) $(SOURCES_DIR) $(HEROICONS_DIR) $(TOOLS_DIR) $(PUBLIC_DIR))
 
 # --- Cibles Principales ---
 
@@ -84,7 +82,7 @@ clean:
 	@echo "🧹 Cleaning build artifacts, generated files, and caches..."
 	@echo "   Current project directory: $(shell pwd)"
 
-	# Nettoyage sécurisé du répertoire public (où BlitzKit met les assets traités)
+	# Nettoyage sécurisé du contenu du répertoire public
 	@if [ -z "$(PUBLIC_DIR)" ]; then \
 		echo "Error: PUBLIC_DIR is not set. Aborting clean to prevent accidental deletion."; \
 		exit 1; \
@@ -95,14 +93,14 @@ clean:
 		echo "Error: PUBLIC_DIR ('$(abspath $(PUBLIC_DIR))') seems outside project ('$(abspath .)'). Aborting clean."; \
 		exit 1; \
 	fi
-	@echo "   Cleaning public asset directory: $(PUBLIC_DIR)..."
+	@echo "   Cleaning content of public asset directory: $(PUBLIC_DIR)..."
 	@if [ -d "$(PUBLIC_DIR)" ]; then \
-		rm -rf "$(PUBLIC_DIR)"; \
-		echo "   Removed $(PUBLIC_DIR)"; \
+		find "$(PUBLIC_DIR)" -mindepth 1 -delete; \
+		echo "   Content of $(PUBLIC_DIR) removed."; \
 	else \
-		echo "   Directory $(PUBLIC_DIR) does not exist, skipping its removal."; \
+		echo "   Directory $(PUBLIC_DIR) does not exist, skipping content removal. Ensuring it exists..."; \
+		mkdir -p "$(PUBLIC_DIR)"; \
 	fi
-	# BlitzKit recréera PUBLIC_DIR au prochain démarrage/build si nécessaire
 
 	@echo "   Removing Go build binary directory: $(BIN_DIR)..."
 	@if [ -d "$(BIN_DIR)" ]; then rm -rf "$(BIN_DIR)"; fi
@@ -119,13 +117,16 @@ clean:
 	@if [ -f "$(TOOLS_DIR)/node_modules/.installed" ]; then rm -f "$(TOOLS_DIR)/node_modules/.installed"; fi
 	@if [ -f "$(PYTHON_VENV_DIR)/.installed" ]; then rm -f "$(PYTHON_VENV_DIR)/.installed"; fi
 
-
 	@echo "   Removing generated CSS file: $(OUTPUT_CSS_FILE)..."
 	@if [ -f "$(OUTPUT_CSS_FILE)" ]; then rm -f "$(OUTPUT_CSS_FILE)"; fi
 	
-	# Optionnel: Nettoyer le cache L2 de BlitzKit. Faire attention si partagé ou important.
-	# @echo "   Cleaning BlitzKit L2 cache directory: $(CACHE_DIR)..."
-	# @if [ -d "$(CACHE_DIR)" ]; then rm -rf "$(CACHE_DIR)"; mkdir -p "$(CACHE_DIR)"; fi
+	@echo "   Removing BlitzKit L2 cache directory: $(CACHE_DIR)..."
+	@if [ -d "$(CACHE_DIR)" ]; then \
+		rm -rf "$(CACHE_DIR)"; \
+		echo "   Removed $(CACHE_DIR)"; \
+	else \
+		echo "   Cache directory $(CACHE_DIR) does not exist, skipping its removal."; \
+	fi
 
 	@echo "🧼 Clean complete."
 
@@ -154,15 +155,19 @@ $(TOOLS_DIR)/node_modules/.installed: $(PACKAGE_JSON)
 .PHONY: npm-install
 npm-install: $(TOOLS_DIR)/node_modules/.installed
 
+# MODIFICATION ICI pour installer setuptools et wheel explicitement AVANT requirements.txt
 $(PYTHON_VENV_DIR)/.installed: $(REQUIREMENTS_TXT)
 	@echo "🐍 Setting up Python virtual environment at $(PYTHON_VENV_DIR)..."
 	@if [ ! -d "$(PYTHON_VENV_DIR)" ]; then \
 		python3 -m venv $(PYTHON_VENV_DIR); \
 	fi
-	@echo "🐍 Upgrading pip and installing/updating Python dependencies from $(REQUIREMENTS_TXT)..."
+	@echo "🐍 Upgrading pip in venv..."
 	@$(PYTHON_INTERP) -m pip install --upgrade pip
+	@echo "🐍 Installing core build tools (setuptools, wheel) in venv..."
+	@$(PYTHON_INTERP) -m pip install setuptools wheel
+	@echo "🐍 Installing Python dependencies from $(REQUIREMENTS_TXT)..."
 	@$(PYTHON_INTERP) -m pip install -r $(REQUIREMENTS_TXT)
-	@touch $@
+	@touch $@ # Crée le fichier marqueur
 
 .PHONY: python-venv-setup
 python-venv-setup: $(PYTHON_VENV_DIR)/.installed

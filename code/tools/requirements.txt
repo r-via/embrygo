@@ -1,5 +1,3 @@
 # tools/requirements.txt
-setuptools>=60.0.0  # Ou une version récente
-wheel>=0.30.0       # Ou une version récente
 # templ-heroicons-generator>=0.2.0 # Si vous le publiez sur PyPI un jour
 git+https://github.com/r-via/templ-heroicons-generator.git
