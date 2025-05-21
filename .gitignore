@@ -13,7 +13,7 @@ service-app.exe
 !/webroot/www/.gitkeep
 /webroot/cache/*
 node_modules
-.venv
+.venv-embrygo
 .heroicons_cache
 cache
 

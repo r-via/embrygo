@@ -1,40 +1,15 @@
 package pages
 
 import (
+	"github.com/r-via/embrygo/webroot/views/components/heroicons" 
 	"github.com/r-via/embrygo/webroot/views/layouts"
-	"github.com/r-via/embrygo/webroot/views/components/heroicons" // Assuming heroicons package will be generated here
-    "html/template" // For Raw HTML if needed, or just use templ syntax
 )
 
-// UtilityStatus represents the status of a core technology/feature.
-type UtilityStatus struct {
-	Name   string
-	Status string
-	Icon   string // Name of the Heroicon component (e.g., "Outline_check_circle")
-}
-
-// WelcomePageData holds all data needed for the welcome page.
 type WelcomePageData struct {
 	Lang         string
-	Translations map[string]string
+	Translations map[string]string // Contient toutes les traductions nécessaires
 	Base         layouts.BaseData
-	Utilities    []UtilityStatus
 }
-
-// Helper function to render an icon if its name is provided.
-func renderIcon(iconName string) templ.Component {
-    switch iconName {
-        case "check_circle":
-            return heroicons.Outline_check_circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
-        case "information_circle":
-            return heroicons.Outline_information_circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-info flex-shrink-0"})
-        // Add more cases for other icons if needed
-        default:
-            // Return an empty component or a default icon if name is unknown
-            return templ.Raw("") 
-    }
-}
-
 
 templ WelcomePageContent(data WelcomePageData) {
 	<div class="prose max-w-4xl mx-auto bg-base-100 p-6 md:p-8 rounded-lg shadow-lg">
@@ -47,17 +22,61 @@ templ WelcomePageContent(data WelcomePageData) {
 
 		<h3 class="text-2xl font-semibold mt-8 mb-4">{ data.Translations["utilities_title"] }</h3>
 		<ul class="list-none p-0 space-y-3">
-			for _, util := range data.Utilities {
-				<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-                    @renderIcon(util.Icon)
-					<span class="font-medium text-base-content flex-grow">{ data.Translations[util.Name] }</span>
-					<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-				</li>
-			}
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["go_backend"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["fiber_framework"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["blitzkit_server"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["templ_templating"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Beaker(templ.Attributes{"class": "w-5 h-5 mr-3 text-info flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["htmx"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Paint_Brush(templ.Attributes{"class": "w-5 h-5 mr-3 text-accent flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["tailwind_css"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Sparkles(templ.Attributes{"class": "w-5 h-5 mr-3 text-primary flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["daisy_ui"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Code_Bracket(templ.Attributes{"class": "w-5 h-5 mr-3 text-secondary flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["heroicons_generator"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Document_Text(templ.Attributes{"class": "w-5 h-5 mr-3 text-warning flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["slog_logging"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
+			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+				@heroicons.Outline_Arrow_Path(templ.Attributes{"class": "w-5 h-5 mr-3 text-neutral flex-shrink-0"})
+				<span class="font-medium text-base-content flex-grow">{ data.Translations["air_live_reload"] }</span>
+				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+			</li>
 		</ul>
         
         <div class="mt-10 p-4 bg-base-200 rounded-md text-sm">
-            <p>
+            <p class="flex items-center">
+                @heroicons.Outline_Information_Circle(templ.Attributes{"class": "w-5 h-5 mr-2 text-info flex-shrink-0"})
                 <strong class="text-info">Next Steps:</strong>
             </p>
             <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
@@ -70,7 +89,6 @@ templ WelcomePageContent(data WelcomePageData) {
 	</div>
 }
 
-// WelcomePage is the main component for the welcome page, embedding the content within the base layout.
 templ WelcomePage(data WelcomePageData) {
 	@layouts.Base(data.Base) {
 		@WelcomePageContent(data)

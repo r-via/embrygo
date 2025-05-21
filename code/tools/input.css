@@ -1,5 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom base styles or component overrides can go here if needed */
+@import "tailwindcss";
+@source "../code/webroot/views/**/*.{templ}";
+@plugin "daisyui" {
+    themes: light --default, night --prefersdark;
+}

@@ -3,7 +3,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -119,13 +118,13 @@ func main() {
 		SourcesDir:         "webroot/sources", // JS/CSS to be minified by BlitzKit's StaticProcessor
 		StaticsDir:         "webroot/statics", // Files to be copied as-is by BlitzKit's StaticProcessor
 		EnableCSRF:         true,
-		CSRFKeyLookup:      "header:X-CSRF-Token",                                  // HTMX sends token in this header
-		CSRFCookieName:     "__Host-embrygo_csrf_",                                 // Secure prefix for production (HTTPS)
-		CSRFExpiration:     12 * time.Hour,                                         // CSRF token validity
-		CSRFCookieSameSite: "Lax",                                                  // Recommended SameSite policy
-		SecurityHeaders:    defaultSecurityHeaders,                                 // Apply our defined security headers
-		EnableMetrics:      true,                                                   // Expose Prometheus metrics at /metrics
-		EnableRateLimiter:  false,                                                  // Keep false for simple EmbryGo starter
+		CSRFKeyLookup:      "header:X-CSRF-Token",  // HTMX sends token in this header
+		CSRFCookieName:     "__Host-embrygo_csrf_", // Secure prefix for production (HTTPS)
+		CSRFExpiration:     12 * time.Hour,         // CSRF token validity
+		CSRFCookieSameSite: "Lax",                  // Recommended SameSite policy
+		SecurityHeaders:    defaultSecurityHeaders, // Apply our defined security headers
+		EnableMetrics:      true,                   // Expose Prometheus metrics at /metrics
+		EnableRateLimiter:  false,                  // Keep false for simple EmbryGo starter
 		// ErrorComponentGenerator: func(err error, code int, isDev bool) templ.Component { ... } // Optional: For custom error pages via Templ
 	}
 	if !isProduction {
@@ -171,8 +170,8 @@ func main() {
 			CookieName:     serverConfig.CSRFCookieName,
 			CookieSameSite: serverConfig.CSRFCookieSameSite,
 			Expiration:     serverConfig.CSRFExpiration,
-			CookieSecure:   isProduction, // CSRF cookie should be secure in production (HTTPS)
-			CookieHTTPOnly: true,         // CSRF cookie should be HTTPOnly
+			CookieSecure:   isProduction,            // CSRF cookie should be secure in production (HTTPS)
+			CookieHTTPOnly: true,                    // CSRF cookie should be HTTPOnly
 			ContextKey:     blitzkit.CSRFContextKey, // Key to store token in c.Locals
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
 				reqIDVal := c.Locals("requestid")

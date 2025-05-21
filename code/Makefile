@@ -1,6 +1,3 @@
-# Makefile pour EmbryGo (github.com/r-via/embrygo)
-
-# --- Variables de Configuration ---
 APP_NAME := service-app
 CMD_DIR := ./cmd/$(APP_NAME)
 MAIN_GO_PATH := $(CMD_DIR)/main.go
@@ -8,16 +5,17 @@ MAIN_GO_PATH := $(CMD_DIR)/main.go
 BIN_DIR := ./bin
 OUTPUT_BINARY := $(BIN_DIR)/$(APP_NAME)
 
-# Outils
-TEMPL_CLI_PACKAGE := github.com/a-h/templ/cmd/templ # Pour `go run`
-TAILWIND_CLI := npx tailwindcss # Utilise npx pour lancer tailwind localement
+TEMPL_CLI_PACKAGE := github.com/a-h/templ/cmd/templ
+TAILWIND_CLI := ./tools/node_modules/.bin/tailwindcss
 
-# Python pour le générateur d'icônes (environnement virtuel)
-PYTHON_VENV_DIR := ./tools/.venv
+# Configuration NVM
+NVM_DIR := $(HOME)/.nvm
+NVM_SCRIPT := $(NVM_DIR)/nvm.sh
+
+PYTHON_VENV_DIR := ./tools/.venv-embrygo
 PYTHON_INTERP := $(PYTHON_VENV_DIR)/bin/python
 HEROICONS_GENERATOR_SCRIPT := $(PYTHON_VENV_DIR)/bin/templ-generate-heroicons
 
-# Chemins des fichiers et répertoires pour les assets
 WEBROOT_DIR := ./webroot
 VIEWS_DIR := $(WEBROOT_DIR)/views
 COMPONENTS_DIR := $(VIEWS_DIR)/components
@@ -30,21 +28,17 @@ TAILWIND_CONFIG := $(TOOLS_DIR)/tailwind.config.js
 PACKAGE_JSON := $(TOOLS_DIR)/package.json
 REQUIREMENTS_TXT := $(TOOLS_DIR)/requirements.txt
 
-# Répertoires pour BlitzKit StaticProcessor et service direct
-PUBLIC_DIR := $(WEBROOT_DIR)/www     # Destination finale des assets servis (populé par BlitzKit)
-STATICS_DIR := $(WEBROOT_DIR)/statics # Fichiers copiés tels quels par BlitzKit (ex: favicon, htmx.min.js, tailwind.css généré)
-SOURCES_DIR := $(WEBROOT_DIR)/sources   # Fichiers sources à minifier par BlitzKit (ex: app.js)
+PUBLIC_DIR := $(WEBROOT_DIR)/www
+STATICS_DIR := $(WEBROOT_DIR)/statics
+SOURCES_DIR := $(WEBROOT_DIR)/sources
 
-# Fichier CSS généré par Tailwind, placé dans STATICS_DIR pour être traité par BlitzKit
 OUTPUT_CSS_FILE := $(STATICS_DIR)/tailwind.css
 
-# Cache directory (handled by BlitzKit)
 CACHE_DIR := $(WEBROOT_DIR)/cache
 
-# Assurer l'existence de certains répertoires essentiels au démarrage du Makefile lui-même
-DUMMY := $(shell mkdir -p $(BIN_DIR) $(STATICS_DIR) $(SOURCES_DIR) $(HEROICONS_DIR) $(TOOLS_DIR) $(PUBLIC_DIR))
+MIN_NODE_VERSION := "16.0.0" # Non utilisé activement pour comparaison de version stricte pour l'instant
 
-# --- Cibles Principales ---
+DUMMY := $(shell mkdir -p $(BIN_DIR) $(STATICS_DIR) $(SOURCES_DIR) $(HEROICONS_DIR) $(TOOLS_DIR) $(PUBLIC_DIR))
 
 .PHONY: all
 all: build
@@ -63,7 +57,7 @@ run: setup-tools generate-assets-dev
 	@echo "🚀 Starting application in development mode with Air..."
 	@echo "   Live reload enabled. Check .air.toml for config."
 	@echo "-------------------------------------------"
-	@air -c .air.toml
+	@. "$(NVM_SCRIPT)" && nvm use && air -c .air.toml # Assurer que la version NVM est active pour 'air' aussi si 'air' lance des scripts node
 
 .PHONY: start-prod
 start-prod:
@@ -81,10 +75,8 @@ start-prod:
 clean:
 	@echo "🧹 Cleaning build artifacts, generated files, and caches..."
 	@echo "   Current project directory: $(shell pwd)"
-
-	# Nettoyage sécurisé du contenu du répertoire public
 	@if [ -z "$(PUBLIC_DIR)" ]; then \
-		echo "Error: PUBLIC_DIR is not set. Aborting clean to prevent accidental deletion."; \
+		echo "Error: PUBLIC_DIR is not set. Aborting clean."; \
 		exit 1; \
 	elif [ "$(PUBLIC_DIR)" = "/" ] || [ "$(PUBLIC_DIR)" = "." ] || [ "$(PUBLIC_DIR)" = ".." ]; then \
 		echo "Error: PUBLIC_DIR is set to a dangerous path ('$(PUBLIC_DIR)'). Aborting clean."; \
@@ -101,25 +93,19 @@ clean:
 		echo "   Directory $(PUBLIC_DIR) does not exist, skipping content removal. Ensuring it exists..."; \
 		mkdir -p "$(PUBLIC_DIR)"; \
 	fi
-
 	@echo "   Removing Go build binary directory: $(BIN_DIR)..."
 	@if [ -d "$(BIN_DIR)" ]; then rm -rf "$(BIN_DIR)"; fi
-
 	@echo "   Removing generated Heroicons .templ file: $(HEROICONS_OUTPUT_TEMPL)..."
 	@if [ -f "$(HEROICONS_OUTPUT_TEMPL)" ]; then rm -f "$(HEROICONS_OUTPUT_TEMPL)"; fi
-
 	@echo "   Removing generated Templ Go files (*_templ.go)..."
 	@find . -name '*_templ.go' -delete
-
 	@echo "   Removing Node.js modules and Python virtual environment from $(TOOLS_DIR)..."
 	@if [ -d "$(TOOLS_DIR)/node_modules" ]; then rm -rf "$(TOOLS_DIR)/node_modules"; fi
 	@if [ -d "$(PYTHON_VENV_DIR)" ]; then rm -rf "$(PYTHON_VENV_DIR)"; fi
 	@if [ -f "$(TOOLS_DIR)/node_modules/.installed" ]; then rm -f "$(TOOLS_DIR)/node_modules/.installed"; fi
 	@if [ -f "$(PYTHON_VENV_DIR)/.installed" ]; then rm -f "$(PYTHON_VENV_DIR)/.installed"; fi
-
 	@echo "   Removing generated CSS file: $(OUTPUT_CSS_FILE)..."
 	@if [ -f "$(OUTPUT_CSS_FILE)" ]; then rm -f "$(OUTPUT_CSS_FILE)"; fi
-	
 	@echo "   Removing BlitzKit L2 cache directory: $(CACHE_DIR)..."
 	@if [ -d "$(CACHE_DIR)" ]; then \
 		rm -rf "$(CACHE_DIR)"; \
@@ -127,10 +113,7 @@ clean:
 	else \
 		echo "   Cache directory $(CACHE_DIR) does not exist, skipping its removal."; \
 	fi
-
 	@echo "🧼 Clean complete."
-
-# --- Génération d'Assets ---
 
 .PHONY: generate-assets-prod
 generate-assets-prod: tailwind-prod heroicons templ-generate
@@ -140,22 +123,73 @@ generate-assets-prod: tailwind-prod heroicons templ-generate
 generate-assets-dev: tailwind-dev heroicons templ-generate
 	@echo "🛠️ All development assets generated."
 
+.PHONY: check-env
+check-env:
+	@echo "🔎 Checking development environment prerequisites..."
+	@if [ -s "$(NVM_SCRIPT)" ]; then \
+		. "$(NVM_SCRIPT)"; \
+		if ! command -v nvm > /dev/null 2>&1; then \
+			echo "---------------------------------------------------------------------"; \
+			echo "❌ Error: Failed to make NVM command available after sourcing $(NVM_SCRIPT)."; \
+			echo "   NVM might be installed but not correctly initialized for non-interactive shells."; \
+			echo "   Ensure nvm.sh is executable and properly configured in your shell profile (e.g., ~/.bashrc, ~/.zshrc)."; \
+			echo "---------------------------------------------------------------------"; \
+			exit 1; \
+		fi; \
+		echo "✅ NVM command is available to make."; \
+		if ! nvm current > /dev/null 2>&1 || ! node -v > /dev/null 2>&1 ; then \
+			echo "---------------------------------------------------------------------"; \
+			echo "⚠️ Node.js not detected or not active via NVM."; \
+			echo "   Attempting to install/use Node.js LTS (Long Term Support)..."; \
+			echo "   This might take a moment."; \
+			nvm install --lts && nvm use --lts && nvm alias default lts; \
+			if [ $$? -ne 0 ]; then \
+				echo "❌ Error: Failed to install or use Node.js LTS via NVM."; \
+				echo "   Please ensure NVM is working correctly and try installing Node.js manually:"; \
+				echo "     nvm install --lts"; \
+				echo "     nvm use --lts"; \
+				echo "     nvm alias default lts"; \
+				echo "---------------------------------------------------------------------"; \
+				exit 1; \
+			fi ;\
+			echo "✅ Node.js LTS installed/activated via NVM."; \
+			echo "---------------------------------------------------------------------"; \
+		else \
+			echo "✅ Node.js (via NVM) is active: $$(nvm current) -> $$(node -v)"; \
+		fi; \
+		if ! command -v npm > /dev/null 2>&1; then \
+			echo "---------------------------------------------------------------------"; \
+			echo "❌ Error: npm is not installed or not in PATH."; \
+			echo "   npm should be installed with Node.js. Check your NVM/Node.js installation."; \
+			echo "---------------------------------------------------------------------"; \
+			exit 1; \
+		fi; \
+		echo "✅ npm found: $$(npm -v)"; \
+		echo "👍 Environment prerequisites seem OK."; \
+	else \
+		echo "---------------------------------------------------------------------"; \
+		echo "❌ Error: NVM script not found at $(NVM_SCRIPT)."; \
+		echo "   NVM (Node Version Manager) is not installed or not in the expected location ($(NVM_DIR))."; \
+		echo "   Please install NVM first by following the instructions at:"; \
+		echo "   https://github.com/nvm-sh/nvm#installing-and-updating"; \
+		echo "   After installation, close and reopen your terminal, then try again."; \
+		echo "---------------------------------------------------------------------"; \
+		exit 1; \
+	fi
 
-# --- Outils et Dépendances ---
 
 .PHONY: setup-tools
-setup-tools: npm-install python-venv-setup heroicons-script-check
+setup-tools: check-env npm-install python-venv-setup heroicons-script-check
 	@echo "🛠️ Tooling setup complete (Node.js & Python)."
 
-$(TOOLS_DIR)/node_modules/.installed: $(PACKAGE_JSON)
+$(TOOLS_DIR)/node_modules/.installed: $(PACKAGE_JSON) check-env
 	@echo "📦 Installing/Updating Node.js dependencies from $(PACKAGE_JSON)..."
-	@cd $(TOOLS_DIR) && npm install
+	@. "$(NVM_SCRIPT)" && nvm use && cd $(TOOLS_DIR) && npm install
 	@touch $@
 
 .PHONY: npm-install
 npm-install: $(TOOLS_DIR)/node_modules/.installed
 
-# MODIFICATION ICI pour installer setuptools et wheel explicitement AVANT requirements.txt
 $(PYTHON_VENV_DIR)/.installed: $(REQUIREMENTS_TXT)
 	@echo "🐍 Setting up Python virtual environment at $(PYTHON_VENV_DIR)..."
 	@if [ ! -d "$(PYTHON_VENV_DIR)" ]; then \
@@ -167,7 +201,7 @@ $(PYTHON_VENV_DIR)/.installed: $(REQUIREMENTS_TXT)
 	@$(PYTHON_INTERP) -m pip install setuptools wheel
 	@echo "🐍 Installing Python dependencies from $(REQUIREMENTS_TXT)..."
 	@$(PYTHON_INTERP) -m pip install -r $(REQUIREMENTS_TXT)
-	@touch $@ # Crée le fichier marqueur
+	@touch $@
 
 .PHONY: python-venv-setup
 python-venv-setup: $(PYTHON_VENV_DIR)/.installed
@@ -175,7 +209,8 @@ python-venv-setup: $(PYTHON_VENV_DIR)/.installed
 .PHONY: heroicons-script-check
 heroicons-script-check: python-venv-setup
 	@echo "🔎 Verifying templ-heroicons-generator script..."
-	@if ! $(PYTHON_INTERP) -m pip show templ-heroicons-generator > /dev/null 2>&1; then \
+	@. "$(NVM_SCRIPT)" && nvm use && \
+	if ! $(PYTHON_INTERP) -m pip show templ-heroicons-generator > /dev/null 2>&1; then \
 		echo "Warning: templ-heroicons-generator not found in venv. Attempting to install/reinstall from $(REQUIREMENTS_TXT)."; \
 		$(PYTHON_INTERP) -m pip install -r $(REQUIREMENTS_TXT); \
 	fi
@@ -186,25 +221,22 @@ heroicons-script-check: python-venv-setup
 	fi
 	@echo "👍 templ-heroicons-generator script verified."
 
-
-# --- Cibles de Génération Spécifiques ---
-
 .PHONY: tailwind-prod
-tailwind-prod: npm-install $(INPUT_CSS) $(TAILWIND_CONFIG) $(VIEWS_DIR)/**/*.templ $(SOURCES_DIR)/**/*.js
+tailwind-prod: npm-install $(INPUT_CSS) $(TAILWIND_CONFIG)
 	@echo "🎨 Generating minified Tailwind CSS for production -> $(OUTPUT_CSS_FILE)"
-	@$(TAILWIND_CLI) -i $(INPUT_CSS) -o $(OUTPUT_CSS_FILE) --minify
+	@. "$(NVM_SCRIPT)" && nvm use && $(TAILWIND_CLI) -i $(INPUT_CSS) -o $(OUTPUT_CSS_FILE) --minify
 
 .PHONY: tailwind-dev
-tailwind-dev: npm-install $(INPUT_CSS) $(TAILWIND_CONFIG) $(VIEWS_DIR)/**/*.templ $(SOURCES_DIR)/**/*.js
+tailwind-dev: npm-install $(INPUT_CSS) $(TAILWIND_CONFIG)
 	@echo "🎨 Generating Tailwind CSS for development -> $(OUTPUT_CSS_FILE)"
-	@$(TAILWIND_CLI) -i $(INPUT_CSS) -o $(OUTPUT_CSS_FILE)
+	@. "$(NVM_SCRIPT)" && nvm use && $(TAILWIND_CLI) -i $(INPUT_CSS) -o $(OUTPUT_CSS_FILE)
 
 .PHONY: heroicons
-heroicons: heroicons-script-check $(VIEWS_DIR)/**/*.templ
+heroicons: heroicons-script-check $(VIEWS_DIR)
 	@echo "🖼️ Generating Heroicons Templ components..."
-	@echo "   Scanning: $(VIEWS_DIR)/**/*.templ"
-	@echo "   Outputting to: $(HEROICONS_OUTPUT_TEMPL)"
-	@$(HEROICONS_GENERATOR_SCRIPT) --input="$(VIEWS_DIR)/**/*.templ" --output="$(HEROICONS_OUTPUT_TEMPL)" --package="heroicons" --preserve-input-attrs
+	@echo "   Scanning: $(VIEWS_DIR)/"
+	@echo "   Outputting to: $(HEROICONS_DIR)/heroicons.templ"
+	@. "$(NVM_SCRIPT)" && nvm use && $(HEROICONS_GENERATOR_SCRIPT) --input="$(VIEWS_DIR)" --output-dir="$(HEROICONS_DIR)"
 	@$(MAKE) templ-generate-specific TARGET_DIR=$(HEROICONS_DIR)
 
 .PHONY: templ-generate
@@ -221,33 +253,27 @@ templ-generate-specific:
 	@echo "✨ Generating Go code from Templ files in $(TARGET_DIR) (using 'go run $(TEMPL_CLI_PACKAGE)')..."
 	@go run $(TEMPL_CLI_PACKAGE) generate $(TARGET_DIR)
 
-
-# --- Compilation Go ---
-
 .PHONY: go-build
 go-build:
 	@echo "🏗️ Building Go application '$(APP_NAME)' for production..."
-	@mkdir -p $(BIN_DIR) # Assurer que le répertoire bin existe
-	@go build -ldflags="-s -w" -o $(OUTPUT_BINARY) $(MAIN_GO_PATH)
-
-# --- Utilitaires Go ---
+	@mkdir -p $(BIN_DIR)
+	@. "$(NVM_SCRIPT)" && nvm use && go build -ldflags="-s -w" -o $(OUTPUT_BINARY) $(MAIN_GO_PATH)
 
 .PHONY: tidy
 tidy:
 	@echo "🧹 Running go mod tidy..."
-	@go mod tidy
+	@. "$(NVM_SCRIPT)" && nvm use && go mod tidy # Si des outils go génèrent du code qui affecte go.mod
 
 .PHONY: fmt
 fmt:
 	@echo "🎨 Formatting Go code..."
-	@go fmt ./...
+	@. "$(NVM_SCRIPT)" && nvm use && go fmt ./...
 
 .PHONY: test
 test:
 	@echo "🧪 Running Go tests..."
-	@go test ./... -v
+	@. "$(NVM_SCRIPT)" && nvm use && go test ./... -v
 
-# --- Documentation et Aide ---
 .PHONY: help
 help:
 	@echo "EmbryGo Makefile - Available commands:"
@@ -269,7 +295,8 @@ help:
 	@echo "    make templ-generate        - Generate Go code from ALL .templ files."
 	@echo ""
 	@echo "  Setup & Maintenance:"
-	@echo "    make setup-tools           - Install/setup Node.js and Python tool dependencies."
+	@echo "    make setup-tools           - Install/setup Node.js and Python tool dependencies (includes env check)."
+	@echo "    make check-env             - Verify NVM/Node/npm prerequisites."
 	@echo "    make clean                 - Remove build artifacts, generated files, and caches."
 	@echo "    make tidy                  - Run 'go mod tidy'."
 	@echo "    make fmt                   - Format Go code."
