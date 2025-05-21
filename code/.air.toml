@@ -1,0 +1,46 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "make templ-generate && go build -o ./tmp/main ./cmd/service-app/main.go"
+  bin = "./tmp/main"
+  full_bin = "./tmp/main" # Assurez-vous que full_bin est correct pour votre OS si différent
+  delay = 1000 # ms
+  stop_on_error = true
+  log = "air_errors.log"
+  send_interrupt = true
+  kill_delay = 500 # ms
+
+[watch]
+  includes = [
+    "cmd/**/*.go",
+    "internal/**/*.go",
+    "pkg/**/*.go",
+    "webroot/views/**/*.templ",
+    "go.mod",
+    ".env"
+  ]
+  excludes = [
+    "tmp/*",
+    "bin/*",
+    "vendor/*",
+    "webroot/www/*", # Ignorer les fichiers générés dans www
+    "webroot/views/**/*_templ.go",
+    "tools/node_modules/*",
+    "tools/.venv/*"
+  ]
+
+[log]
+  time = true
+
+[misc]
+  on_watch_event_cmd = '''
+    changed_file_ext={{.ChangedFileExt}};
+    changed_file_path={{.ChangedFilePath}};
+    if [[ "$changed_file_ext" == ".css" ]] || [[ "$changed_file_ext" == ".js" ]]; then
+      if [[ "$changed_file_path" == tools/input.css ]] || [[ "$changed_file_path" == webroot/sources/app.js ]]; then
+        echo 'Frontend source changed, rebuilding CSS/JS...';
+        make tailwind;
+      fi
+    fi
+  '''

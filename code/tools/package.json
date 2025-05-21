@@ -1,0 +1,14 @@
+{
+  "name": "embrygo-frontend-tools",
+  "version": "0.1.0",
+  "description": "Frontend build tools for EmbryGo project",
+  "scripts": {
+    "tailwind:build": "tailwindcss -i ./input.css -o ../webroot/www/css/tailwind.css --minify",
+    "tailwind:dev": "tailwindcss -i ./input.css -o ../webroot/www/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.10",
+    "daisyui": "^4.7.0",
+    "tailwindcss": "^3.4.0"
+  }
+}

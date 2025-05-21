@@ -1,0 +1,78 @@
+package pages
+
+import (
+	"github.com/r-via/embrygo/webroot/views/layouts"
+	"github.com/r-via/embrygo/webroot/views/components/heroicons" // Assuming heroicons package will be generated here
+    "html/template" // For Raw HTML if needed, or just use templ syntax
+)
+
+// UtilityStatus represents the status of a core technology/feature.
+type UtilityStatus struct {
+	Name   string
+	Status string
+	Icon   string // Name of the Heroicon component (e.g., "Outline_check_circle")
+}
+
+// WelcomePageData holds all data needed for the welcome page.
+type WelcomePageData struct {
+	Lang         string
+	Translations map[string]string
+	Base         layouts.BaseData
+	Utilities    []UtilityStatus
+}
+
+// Helper function to render an icon if its name is provided.
+func renderIcon(iconName string) templ.Component {
+    switch iconName {
+        case "check_circle":
+            return heroicons.Outline_check_circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
+        case "information_circle":
+            return heroicons.Outline_information_circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-info flex-shrink-0"})
+        // Add more cases for other icons if needed
+        default:
+            // Return an empty component or a default icon if name is unknown
+            return templ.Raw("") 
+    }
+}
+
+
+templ WelcomePageContent(data WelcomePageData) {
+	<div class="prose max-w-4xl mx-auto bg-base-100 p-6 md:p-8 rounded-lg shadow-lg">
+		<h2 class="text-3xl font-semibold mb-6 text-center border-b border-base-300 pb-4">{ data.Translations["welcome_message"] }</h2>
+		
+		<p class="text-lg">
+			This page demonstrates the basic setup of the EmbryGo starter project. 
+			It integrates several modern web technologies to provide a solid foundation for your Go applications.
+		</p>
+
+		<h3 class="text-2xl font-semibold mt-8 mb-4">{ data.Translations["utilities_title"] }</h3>
+		<ul class="list-none p-0 space-y-3">
+			for _, util := range data.Utilities {
+				<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+                    @renderIcon(util.Icon)
+					<span class="font-medium text-base-content flex-grow">{ data.Translations[util.Name] }</span>
+					<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
+				</li>
+			}
+		</ul>
+        
+        <div class="mt-10 p-4 bg-base-200 rounded-md text-sm">
+            <p>
+                <strong class="text-info">Next Steps:</strong>
+            </p>
+            <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
+                <li>Explore the <code class="bg-base-300 px-1 rounded">Makefile</code> for common commands like <code>make run</code> or <code>make build</code>.</li>
+                <li>Check your <code>.env</code> file (created from <code>.env.example</code>) for configuration.</li>
+                <li>The BlitzKit server exposes <code>/metrics</code> (Prometheus) and <code>/health</code> endpoints.</li>
+                <li>An example admin route is at <code>/admin-example</code> (if <code>ADMIN_USER</code>/<code>PASS</code> are set in <code>.env</code>).</li>
+            </ul>
+        </div>
+	</div>
+}
+
+// WelcomePage is the main component for the welcome page, embedding the content within the base layout.
+templ WelcomePage(data WelcomePageData) {
+	@layouts.Base(data.Base) {
+		@WelcomePageContent(data)
+	}
+}

@@ -1,0 +1,65 @@
+package layouts
+
+import "strings"
+import "net/url"
+import "time"
+// import "github.com/r-via/embrygo/pkg/translations" // Translations are in BaseData
+
+type BaseData struct {
+	Lang         string
+	PageTitle    string
+	Translations map[string]string
+	CSRFToken    string
+	BasePath     string
+}
+
+func assetUrl(basePath, assetPath string) string {
+	if !strings.HasPrefix(assetPath, "/") {
+		assetPath = "/" + assetPath
+	}
+	if basePath == "/" {
+		return assetPath
+	}
+	finalPath, _ := url.JoinPath(basePath, assetPath)
+    if !strings.HasPrefix(finalPath, "/") && basePath != "/" {
+        //
+    } else if basePath == "/" && !strings.HasPrefix(finalPath, "/") {
+         return "/" + finalPath
+    }
+	return finalPath
+}
+
+templ Base(data BaseData) {
+	<!DOCTYPE html>
+	<html lang={data.Lang} class="h-full antialiased" data-theme="night"> {/* Default to night theme */}
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			if data.CSRFToken != "" && data.CSRFToken != "csrf-disabled" {
+				<meta name="csrf-token" content={data.CSRFToken}/>
+			}
+			<title>{data.PageTitle}</title>
+			<link href={assetUrl(data.BasePath, "/favicon.ico")} rel="icon" type="image/x-icon"/>
+			<link href={assetUrl(data.BasePath, "/tailwind.css")} rel="stylesheet"/>
+			<script src={assetUrl(data.BasePath, "/htmx.min.js")} defer></script>
+			<script src={assetUrl(data.BasePath, "/app.js")} defer></script>
+		</head>
+		<body class="min-h-screen bg-base-200 text-base-content flex flex-col">
+			<header class="bg-base-300 shadow-md sticky top-0 z-50">
+				<div class="container mx-auto px-4 py-4">
+					<h1 class="text-2xl font-bold text-primary">
+						<a href={assetUrl(data.BasePath, "/welcome")}>{data.Translations["welcome_title"]}</a>
+					</h1>
+				</div>
+			</header>
+
+			<main id="main-content" class="container mx-auto px-4 py-8 flex-grow">
+				{children...}
+			</main>
+
+			<footer class="bg-base-300 text-base-content/70 text-center py-6 mt-auto">
+				<p>© {time.Now().Format("2006")} {data.Translations["footer_text"]}. All rights reserved.</p>
+			</footer>
+		</body>
+	</html>
+}
