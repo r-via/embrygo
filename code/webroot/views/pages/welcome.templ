@@ -1,91 +1,77 @@
 package pages
 
 import (
-	"github.com/r-via/embrygo/webroot/views/components/heroicons" 
+	"github.com/r-via/embrygo/webroot/views/components/heroicons"
 	"github.com/r-via/embrygo/webroot/views/layouts"
 )
 
+// FeatureStatus represents the checked status of a specific project feature or tool.
+type FeatureStatus struct {
+	Name         string          // Translation key for the feature's display name.
+	IsOk         bool            // True if the feature is considered OK/active.
+	StatusText   string          // Translation key for the status text (e.g., "status_ok", "status_error").
+	StatusDetail string          // Optional detailed message about the status (e.g., version, path, error hint).
+	Icon         templ.Component // Specific icon to display for this feature status.
+}
+
+// WelcomePageData holds all necessary data for rendering the welcome page,
+// including dynamic feature statuses.
 type WelcomePageData struct {
 	Lang         string
-	Translations map[string]string // Contient toutes les traductions nécessaires
+	Translations map[string]string
 	Base         layouts.BaseData
+	Features     []FeatureStatus
 }
 
 templ WelcomePageContent(data WelcomePageData) {
 	<div class="prose max-w-4xl mx-auto bg-base-100 p-6 md:p-8 rounded-lg shadow-lg">
 		<h2 class="text-3xl font-semibold mb-6 text-center border-b border-base-300 pb-4">{ data.Translations["welcome_message"] }</h2>
-		
 		<p class="text-lg">
-			This page demonstrates the basic setup of the EmbryGo starter project. 
+			This page demonstrates the basic setup of the EmbryGo starter project.
 			It integrates several modern web technologies to provide a solid foundation for your Go applications.
+			The status of key features is checked dynamically:
 		</p>
 
 		<h3 class="text-2xl font-semibold mt-8 mb-4">{ data.Translations["utilities_title"] }</h3>
 		<ul class="list-none p-0 space-y-3">
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["go_backend"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["fiber_framework"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["blitzkit_server"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 mr-3 text-success flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["templ_templating"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Beaker(templ.Attributes{"class": "w-5 h-5 mr-3 text-info flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["htmx"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Paint_Brush(templ.Attributes{"class": "w-5 h-5 mr-3 text-accent flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["tailwind_css"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Sparkles(templ.Attributes{"class": "w-5 h-5 mr-3 text-primary flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["daisy_ui"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Code_Bracket(templ.Attributes{"class": "w-5 h-5 mr-3 text-secondary flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["heroicons_generator"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Document_Text(templ.Attributes{"class": "w-5 h-5 mr-3 text-warning flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["slog_logging"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
-			<li class="flex items-center py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
-				@heroicons.Outline_Arrow_Path(templ.Attributes{"class": "w-5 h-5 mr-3 text-neutral flex-shrink-0"})
-				<span class="font-medium text-base-content flex-grow">{ data.Translations["air_live_reload"] }</span>
-				<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations["status_ok"] }</span>
-			</li>
+			for _, feature := range data.Features {
+				<li class="flex items-start py-3 px-4 bg-base-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
+					<div class="mr-3 mt-1 flex-shrink-0">
+						if feature.Icon != nil {
+							@feature.Icon
+						} else if feature.IsOk {
+							@heroicons.Outline_Check_Circle(templ.Attributes{"class": "w-5 h-5 text-success"})
+						} else {
+							@heroicons.Outline_X_Circle(templ.Attributes{"class": "w-5 h-5 text-error"})
+						}
+					</div>
+					<div class="flex-grow">
+						<span class="font-medium text-base-content">{ data.Translations[feature.Name] }</span>
+						if feature.StatusDetail != "" {
+							<span class="block text-xs text-base-content/70">{ feature.StatusDetail }</span>
+						}
+					</div>
+					if feature.IsOk {
+						<span class="font-semibold text-success ml-4 badge badge-success badge-outline">{ data.Translations[feature.StatusText] }</span>
+					} else {
+						<span class="font-semibold text-error ml-4 badge badge-error badge-outline">{ data.Translations[feature.StatusText] }</span>
+					}
+				</li>
+			}
 		</ul>
-        
-        <div class="mt-10 p-4 bg-base-200 rounded-md text-sm">
-            <p class="flex items-center">
-                @heroicons.Outline_Information_Circle(templ.Attributes{"class": "w-5 h-5 mr-2 text-info flex-shrink-0"})
-                <strong class="text-info">Next Steps:</strong>
-            </p>
-            <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
-                <li>Explore the <code class="bg-base-300 px-1 rounded">Makefile</code> for common commands like <code>make run</code> or <code>make build</code>.</li>
-                <li>Check your <code>.env</code> file (created from <code>.env.example</code>) for configuration.</li>
-                <li>The BlitzKit server exposes <code>/metrics</code> (Prometheus) and <code>/health</code> endpoints.</li>
-                <li>An example admin route is at <code>/admin-example</code> (if <code>ADMIN_USER</code>/<code>PASS</code> are set in <code>.env</code>).</li>
-            </ul>
-        </div>
+		
+		<div class="mt-10 p-4 bg-base-200 rounded-md text-sm">
+			<p class="flex items-center">
+				@heroicons.Outline_Information_Circle(templ.Attributes{"class": "w-5 h-5 mr-2 text-info flex-shrink-0"})
+				<strong class="text-info">Next Steps:</strong>
+			</p>
+			<ul class="list-disc list-inside ml-4 mt-2 space-y-1">
+				<li>Explore the <code class="bg-base-300 px-1 rounded">Makefile</code> for common commands.</li>
+				<li>Check your <code>.env</code> file for configuration.</li>
+				<li>The BlitzKit server exposes <code>/metrics</code> and <code>/health</code> endpoints.</li>
+				<li>An example admin route is at <code>/admin-example</code>.</li>
+			</ul>
+		</div>
 	</div>
 }
 

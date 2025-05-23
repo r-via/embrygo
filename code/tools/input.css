@@ -1,5 +1,31 @@
-@import "tailwindcss";
-@source "../code/webroot/views/**/*.{templ}";
-@plugin "daisyui" {
-    themes: light --default, night --prefersdark;
-}
+/*
+ * File: tools/input.css
+ * Description: Fichier source CSS principal pour Tailwind CSS.
+ *              Importe Tailwind, configure les sources pour la détection des classes
+ *              utilisées par les templates Templ, et active le plugin DaisyUI
+ *              avec les thèmes light et night. Définit également quelques
+ *              animations et styles personnalisés pour HTMX et les toasts.
+ */
+ @import "tailwindcss";
+ @source "../webroot/views/**/*.{templ}";
+ @plugin "daisyui" {
+     themes: light --default, night --prefersdark;
+   }
+ 
+ tr.htmx-swapping td {
+   opacity: 0;
+   transition: opacity 1s ease-out;
+ }
+ 
+ @keyframes fadeOut {
+   0% {
+       opacity: 1;
+   }
+   100% {
+       opacity: 0;
+   }
+ }
+ 
+ .fade-out {
+   animation: fadeOut 1s ease-in-out 2s forwards;
+ }

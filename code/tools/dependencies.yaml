@@ -1,119 +1,116 @@
-# dependencies.exemple.yaml
-# Example configuration for Pyt-Patrol.
-# Copy this to 'dependencies.yaml' in your project and adapt it.
-# Paths are relative to the '--context-dir' (your project's root),
-# unless they start with '~' (home dir) or '/' (absolute).
+# Pyt-Patrol Dependency Configuration File
+# ----------------------------------------
+# This file defines the dependencies to be checked and managed by Pyt-Patrol.
+# It is intended to be placed in the directory specified by Pyt-Patrol's
+# '--context-dir' option (e.g., the 'tools/' directory of your project).
+#
+# Path Resolution:
+# - Paths starting with '~' are expanded to the user's home directory.
+# - Absolute paths (e.g., /usr/bin/tool) are used as-is.
+# - All other paths for 'path_to_check', 'requirements_file', and 'venv_name'
+#   are resolved relative to the '--context-dir' provided to Pyt-Patrol.
+#
+# Pyt-Patrol will look for a file named 'dependencies.yaml' in the
+# --context-dir by default, or you can specify a different file with --config.
 
-# --- Category: Core System Tools ---
-# Essential command-line utilities required for basic operations or by other tools.
-# These are expected to be in the system PATH.
-core_system_tools: # Renommé de 'system_tools' pour la clarté
+core_system_tools:
   - name: "Go Compiler (System)"
     type: "executable_version_check"
     executable_name: "go"
     check_command_version: "go version"
-    version_regex: "go(?: version go)?(\\d+\\.\\d+(?:\\.\\d+)?(?:[a-zA-Z0-9.-]+)?)" # Captures X.Y or X.Y.Z and potential suffixes
-    min_version: "1.21" # Major.Minor
+    version_regex: "go(?: version go)?(\\d+\\.\\d+(?:\\.\\d+)?(?:[a-zA-Z0-9.-]+)?)"
+    min_version: "1.21"
     not_found_message: "Go executable ('go') not found in PATH."
     install_suggestion: "Please install Go (e.g., from https://golang.org/dl/) and ensure it's in your PATH."
 
-  - name: "NVM (Node Version Manager)" # Renommé de 'NVM (Node Version Mgr)' pour la clarté
+  - name: "NVM (Node Version Manager)"
     type: "file_exists_check"
-    path_to_check: "~/.nvm/nvm.sh" # Expands to user's home directory
+    path_to_check: "~/.nvm/nvm.sh"
     not_found_message: "NVM installation script ('~/.nvm/nvm.sh') not found."
-    install_suggestion: "Install NVM from https://github.com/nvm-sh/nvm." # Suggestion simplifiée
+    install_suggestion: "Install NVM from https://github.com/nvm-sh/nvm."
 
-  - name: "System Python 3 (for venv creation)" # Renommé de 'Python 3 (System for venv)'
-    type: "python_capabilities_check" # Special handler for Python system checks
-    executable_name: "python3" # Script will search for 'python3' in PATH
-    check_command_version: "python3 --version" # Used by the handler
-    version_regex: "Python (\\d+\\.\\d+(?:\\.\\d+)?)" # Captures X.Y or X.Y.Z
+  - name: "System Python 3 (for venv creation)"
+    type: "python_capabilities_check"
+    executable_name: "python3"
+    check_command_version: "python3 --version"
+    version_regex: "Python (\\d+\\.\\d+(?:\\.\\d+)?)"
     min_version: "3.8"
     not_found_message: "System Python 3 ('python3') not found in PATH."
     install_suggestion: "Please install Python 3.8+ and ensure 'python3' is in your PATH. This is needed to create the project's virtual environment."
 
-  - name: "Git SCM" # Renommé de 'Git'
+  - name: "Git SCM"
     type: "executable_version_check"
     executable_name: "git"
     check_command_version: "git --version"
-    version_regex: "git version (\\d+\\.\\d+\\.\\d+)" # Captures X.Y.Z
-    # min_version: "2.0.0" # Optional: specify a minimum Git version if needed
+    version_regex: "git version (\\d+\\.\\d+\\.\\d+)"
     not_found_message: "Git executable ('git') not found in PATH."
     install_suggestion: "Please install Git (e.g., via your system package manager or from https://git-scm.com/downloads)."
 
-# --- Category: Go Language Tools (Installed via 'go install') ---
-go_language_tools: # Renommé de 'go_tools'
-  - name: "Templ CLI (Go HTML Templating)" # Renommé de 'Templ CLI'
+go_language_tools:
+  - name: "Templ CLI (Go HTML Templating)"
     type: "go_tool_install_check"
     executable_name: "templ"
     install_package: "github.com/a-h/templ/cmd/templ@latest"
-    check_command_version: "templ version" # To verify after potential install
-    version_regex: "templ version (v\\d+\\.\\d+\\.\\d+)" # Regex to parse version from the check command
+    check_command_version: "templ version"
+    version_regex: "templ version (v\\d+\\.\\d+\\.\\d+)"
     help_url: "https://templ.guide/installation"
     not_found_message: "Templ CLI ('templ') not found in PATH."
     install_suggestion: "Run Pyt-Patrol with '--setup', or install manually: 'go install github.com/a-h/templ/cmd/templ@latest'. Ensure $GOBIN or $GOPATH/bin is in your system PATH."
 
-
-  - name: "Air CLI (Go Live Reload)" # Renommé de 'Air CLI'
+  - name: "Air CLI (Go Live Reload)"
     type: "go_tool_install_check"
     executable_name: "air"
     install_package: "github.com/cosmtrek/air@latest"
-    check_command_version: "air -v" # Air uses -v for version
-    version_regex: "air version (v[\\d\\.]+)" # Regex to parse version (e.g., v1.2.3)
+    check_command_version: "air -v"
+    version_regex: "air version (v[\\d\\.]+)"
     help_url: "https://github.com/cosmtrek/air"
     not_found_message: "Air CLI ('air') not found in PATH."
     install_suggestion: "Run Pyt-Patrol with '--setup', or install manually: 'go install github.com/cosmtrek/air@latest'. Ensure $GOBIN or $GOPATH/bin is in your system PATH."
 
-# --- Category: Node.js & Frontend Tools ---
-node_frontend_tools: # Renommé de 'node_tools'
-  - name: "Node.js (provides npm & npx)" # Ajouté pour clarté sur ce qui est vérifié
-    type: "executable_version_check"     # Assumant que Node.js lui-même doit être vérifié.
-    executable_name: "node"              # Si c'était implicite avant, le rendre explicite est mieux.
+node_frontend_tools:
+  - name: "Node.js (provides npm & npx)"
+    type: "executable_version_check"
+    executable_name: "node"
     check_command_version: "node --version"
     version_regex: "v(\\d+\\.\\d+\\.\\d+)"
-    min_version: "18.0.0" # Exemple de version min
+    min_version: "18.0.0"
     not_found_message: "Node.js is not installed or not in system PATH."
     install_suggestion: "Install Node.js (which includes npm and npx) from https://nodejs.org/ or via a version manager like NVM."
 
-  - name: "TailwindCSS CLI" # Renommé de 'TailwindCSS'
+  - name: "TailwindCSS CLI"
     type: "node_tool_check"
-    # executable_name_for_npx: "tailwindcss" # Ce n'est plus nécessaire si check_command_for_npx est clair
-    check_command_for_npx: "tailwindcss --version" # Changé de --help à --version pour la cohérence
-    npm_package_name: "tailwindcss" # Actual npm package name (for messages)
-    version_regex: "tailwindcss v([\\d\\.]+)" # Regex to extract version from check_command_for_npx output
-    install_suggestion: "Ensure 'tailwindcss' is in 'package.json' (in --context-dir) and run 'npm install'."
+    check_command_for_npx: "tailwindcss --version"
+    npm_package_name: "tailwindcss"
+    version_regex: "tailwindcss v([\\d\\.]+)"
+    install_suggestion: "Ensure 'tailwindcss' is in 'package.json' (in --context-dir, e.g., ./tools/package.json) and run 'npm install' there."
 
-  - name: "ESBuild (JS/TS Bundler)" # Renommé de 'ESBuild'
-    type: "node_tool_check"
-    # executable_name_for_npx: "esbuild" # Idem
-    check_command_for_npx: "esbuild --version"
-    npm_package_name: "esbuild"
-    version_regex: "(\\d+\\.\\d+\\.\\d+)" # ESBuild --version retourne juste la version
-    install_suggestion: "Ensure 'esbuild' is in 'package.json' (in --context-dir) and run 'npm install'."
+  - name: "esbuild (Global - for BlitzKit JS minification)"
+    type: "executable_version_check"
+    executable_name: "esbuild"
+    check_command_version: "esbuild --version"
+    version_regex: "(\\d+\\.\\d+\\.\\d+)"
+    not_found_message: "esbuild executable not found in system PATH. BlitzKit will use a fallback JS minifier, but esbuild is recommended for performance."
+    install_suggestion: "Install esbuild globally for optimal JS minification by BlitzKit: 'npm install -g esbuild'."
 
-# --- Category: Project Python Virtual Environment ---
-python_virtual_environment: # Renommé de 'python_venv'
-  - name: "Project Python Venv Directory" # Renommé de 'Python Venv Directory'
+python_virtual_environment:
+  - name: "Project Python Venv Directory (in --context-dir)"
     type: "python_venv_create"
-    # Optional: specify the name of the venv directory.
-    # If not specified, defaults to ".venv" (as defined in Pyt-Patrol's common.py).
-    # This name is relative to the --context-dir.
-    venv_name: ".venv-embrygo" # Example of a custom venv name
+    venv_name: ".venv-embrygo"
 
-  - name: "Project Requirements File (for Venv)" # Renommé de 'Venv Requirements File'
+  - name: "Project Requirements File (in --context-dir)"
     type: "file_exists_check"
-    path_to_check: "requirements.txt" # Assumes requirements.txt is at the project root (--context-dir)
-    not_found_message: "Project's Python requirements file ('requirements.txt') not found in the context directory."
-    install_suggestion: "Ensure 'requirements.txt' exists in your project's context directory."
+    path_to_check: "requirements.txt"
+    not_found_message: "Python requirements file ('requirements.txt') not found in the context directory."
+    install_suggestion: "Ensure 'requirements.txt' exists in your context directory (e.g., ./tools/)."
 
-  - name: "Venv Packages (from requirements.txt)" # Renommé de 'Venv Packages Installation'
+  - name: "Venv Packages (from requirements.txt in --context-dir)"
     type: "python_venv_pip_install"
-    requirements_file: "requirements.txt" # Path relative to --context-dir
+    requirements_file: "requirements.txt"
     install_suggestion: "Failed to install venv packages. Check 'requirements.txt' (in context directory) and venv health. Run Pyt-Patrol with '--setup'."
 
-  - name: "templ-heroicons-generator (Python Pkg in Venv)" # Renommé de 'templ-heroicons-generator (Venv Pkg)'
-    type: "python_venv_pkg_script_check" # Checks if package is installed AND script is in venv bin
+  - name: "templ-heroicons-generator (Python Pkg in Venv)"
+    type: "python_venv_pkg_script_check"
     package_name: "templ-heroicons-generator"
-    script_name: "templ-generate-heroicons" # The executable script name generated by the package
-    install_suggestion: "Ensure 'templ-heroicons-generator' is in your 'requirements.txt' and run Pyt-Patrol with '--setup'." # Suggestion simplifiée
-    not_found_message: "Package 'templ-heroicons-generator' or its script 'templ-generate-heroicons' not found in the venv." # Message plus précis
+    script_name: "templ-heroicons-generator"
+    install_suggestion: "Ensure 'templ-heroicons-generator' is in your 'requirements.txt' (in --context-dir) and run Pyt-Patrol with '--setup'."
+    not_found_message: "Package 'templ-heroicons-generator' or its script 'templ-heroicons-generator' not found in the venv."

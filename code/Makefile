@@ -10,7 +10,7 @@ TOOLS_PYTHON_VENV_DIR := ./tools/$(TOOLS_PYTHON_VENV_NAME)
 TOOLS_PYTHON_INTERP := $(TOOLS_PYTHON_VENV_DIR)/bin/python
 
 PYT_PATROL_CMD := $(TOOLS_PYTHON_VENV_DIR)/bin/pyt-patrol
-HEROICONS_GENERATOR_CMD := $(TOOLS_PYTHON_VENV_DIR)/bin/templ-generate-heroicons
+HEROICONS_GENERATOR_CMD := $(TOOLS_PYTHON_VENV_DIR)/bin/templ-heroicons-generator
 
 NVM_DIR := $(HOME)/.nvm
 NVM_SCRIPT := $(NVM_DIR)/nvm.sh
@@ -140,12 +140,12 @@ npm-install-tools: $(TOOLS_EMBRYGO_DIR)/node_modules/.installed
 .PHONY: tailwind-prod
 tailwind-prod: npm-install-tools
 	@echo "🎨 Generating minified Tailwind CSS for production -> $(OUTPUT_CSS_FILE)"
-	@. "$(NVM_SCRIPT)" && nvm use > /dev/null 2>&1 && cd $(TOOLS_EMBRYGO_DIR) && npx tailwindcss -i ./input.css -c ./tailwind.config.js -o ../$(OUTPUT_CSS_FILE) --minify > /dev/null
+	@. "$(NVM_SCRIPT)" && nvm use > /dev/null 2>&1 && cd $(TOOLS_EMBRYGO_DIR) && npx tailwindcss -i ./input.css -o ../$(OUTPUT_CSS_FILE) --minify > /dev/null
 
 .PHONY: tailwind-dev
 tailwind-dev: npm-install-tools
 	@echo "🎨 Generating Tailwind CSS for development -> $(OUTPUT_CSS_FILE)"
-	@. "$(NVM_SCRIPT)" && nvm use > /dev/null 2>&1 && cd $(TOOLS_EMBRYGO_DIR) && npx tailwindcss -i ./input.css -c ./tailwind.config.js -o ../$(OUTPUT_CSS_FILE) > /dev/null
+	@. "$(NVM_SCRIPT)" && nvm use > /dev/null 2>&1 && cd $(TOOLS_EMBRYGO_DIR) && npx tailwindcss -i ./input.css -o ../$(OUTPUT_CSS_FILE) > /dev/null
 
 .PHONY: heroicons
 heroicons:
@@ -154,7 +154,7 @@ heroicons:
 		echo "⚠️ Heroicons generator script not found at $(HEROICONS_GENERATOR_CMD). Run 'make setup-tools' first."; \
 		exit 1; \
 	fi
-	@$(HEROICONS_GENERATOR_CMD) --input="./webroot/views" --output-dir="./webroot/views/components/heroicons" > /dev/null
+	@$(HEROICONS_GENERATOR_CMD) --input-dir="." --output-dir="./webroot/views/components/heroicons" > /dev/null
 	# No automatic templ-generate-specific here; covered by generate-assets-dev or templ-generate target
 
 .PHONY: templ-generate

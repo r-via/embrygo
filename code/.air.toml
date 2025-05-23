@@ -1,46 +1,99 @@
+# .air.toml
+# Config file for Air - https://github.com/cosmtrek/air
+
+# Working directory, relative to the location of this file.
 root = "."
+# Temporary directory for build artifacts. Air gère généralement bien ce répertoire
+# et ne devrait pas redémarrer à cause des changements qu'il y effectue.
+# L'exclure explicitement est une bonne pratique de défense en profondeur.
 tmp_dir = "tmp"
 
 [build]
+  # Commande pour construire votre application.
   cmd = "go build -o ./tmp/main ./cmd/service-app/main.go"
+  # Chemin vers le binaire à exécuter après la construction.
   bin = "./tmp/main"
-  full_bin = "./tmp/main" # Assurez-vous que full_bin est correct pour votre OS si différent
-  delay = 1000 # ms
-  stop_on_error = true
-  log = "air_errors.log"
-  send_interrupt = true
-  kill_delay = 500 # ms
 
-[watch]
-  includes = [
-    "cmd/**/*.go",
-    "internal/**/*.go",
-    "pkg/**/*.go",
-    "webroot/views/**/*.templ",
-    "go.mod",
-    ".env"
+  # Arrêter la construction immédiatement en cas d'erreur.
+  stop_on_error = true
+  # Envoyer un signal d'interruption (SIGINT) avant de tuer le processus.
+  send_interrupt = true
+  # Délai avant de forcer l'arrêt si l'interruption ne fonctionne pas.
+  kill_delay = "500ms" # Format "2s", "500ms", etc.
+
+  # ----- GESTION DES FICHIERS SURVEILLÉS -----
+  # Extensions de fichiers à surveiller pour les changements.
+  # Ceci est la principale façon de dire à Air quoi observer.
+  # Basé sur vos `includes` originaux : .go, .templ, go.mod, .env
+  # Et .css, .js pour votre `on_watch_event_cmd`.
+  include_ext = ["go", "templ", "mod", "env", "css", "js"]
+
+  # Répertoires à surveiller explicitement (Air surveille récursivement depuis `root` par défaut).
+  # Si `include_ext` est bien défini, `include_dir` est souvent redondant
+  # sauf si vous voulez restreindre la surveillance à des dossiers spécifiques.
+  # Pour votre cas, `include_ext` avec `root = "."` devrait couvrir :
+  # "cmd/", "internal/", "pkg/", "webroot/views/" (pour .templ)
+  # "tools/" (pour input.css), "webroot/sources/" (pour app.js)
+  # On pourrait donc l'omettre ou être très spécifique :
+  # include_dir = ["cmd", "internal", "pkg", "webroot/views", "tools", "webroot/sources"]
+
+  # Répertoires à EXCLURE COMPLÈTEMENT de la surveillance (et leurs sous-répertoires).
+  # Ceci est la méthode correcte pour exclure des dossiers comme tmp, vendor, etc.
+  exclude_dir = [
+    "tmp",                  # Exclut tmp/ et tout son contenu
+    "bin",                  # Exclut bin/ et tout son contenu
+    "vendor",               # Exclut vendor/ et tout son contenu
+    "webroot/www",          # Exclut webroot/www/ et tout son contenu
+    "tools/node_modules",   # Exclut tools/node_modules/ et tout son contenu
+    "tools/.venv"           # Exclut tools/.venv/ et tout son contenu
+    # NE PAS ajouter "webroot/views" ici si vous voulez surveiller les fichiers .templ à l'intérieur.
+    # L'exclusion des fichiers *_templ.go se fait avec exclude_regex ci-dessous.
   ]
-  excludes = [
-    "tmp/*",
-    "bin/*",
-    "vendor/*",
-    "webroot/www/*", # Ignorer les fichiers générés dans www
-    "webroot/views/**/*_templ.go",
-    "tools/node_modules/*",
-    "tools/.venv/*"
+
+  # Motifs de fichiers spécifiques à EXCLURE en utilisant des expressions régulières.
+  # Crucial pour exclure les fichiers Go générés par Templ tout en surveillant les fichiers .templ sources.
+  # Cette regex cible les fichiers se terminant par _templ.go dans le dossier webroot/views/
+  exclude_regex = [
+    "webroot/views/.*_templ\\.go$"
   ]
+
+  # Délai en millisecondes avant de déclencher une reconstruction après un changement de fichier.
+  delay = 1000 # 1 seconde
+
+  # Utiliser l'interrogation du système de fichiers (polling).
+  # Utile dans certains environnements (comme Docker sur certaines plateformes) où les événements fs
+  # pourraient être peu fiables. Mettez à `false` pour une meilleure performance sur les machines locales
+  # si les événements fs fonctionnent bien (généralement le cas sur Linux/macOS natifs).
+  poll = false # Ou `true` si vous rencontrez des problèmes de détection de changement.
+
+  # Fichier de log pour les erreurs de construction (votre `log` original).
+  log = "air_errors.log"
+
+[color]
+  # Personnaliser les couleurs pour différentes sorties de log.
+  main = "yellow"
+  watcher = "cyan"
+  build = "green"
+  runner = "magenta"
 
 [log]
+  # Afficher les logs d'Air lui-même (watcher, build) en plus des logs de l'application.
+  main_only = false
+  # Afficher l'heure dans les logs (votre `time = true` original).
   time = true
 
 [misc]
+  # Supprimer le répertoire `tmp_dir` lorsque Air se termine.
+  clean_on_exit = true
+
+  # Votre commande `on_watch_event_cmd` pour gérer les changements CSS/JS.
   on_watch_event_cmd = '''
-    changed_file_ext={{.ChangedFileExt}};
-    changed_file_path={{.ChangedFilePath}};
-    if [[ "$changed_file_ext" == ".css" ]] || [[ "$changed_file_ext" == ".js" ]]; then
-      if [[ "$changed_file_path" == tools/input.css ]] || [[ "$changed_file_path" == webroot/sources/app.js ]]; then
-        echo 'Frontend source changed, rebuilding CSS/JS...';
-        make tailwind;
+    changed_file_ext={{.ChangedFileExt}}
+    changed_file_path={{.ChangedFilePath}}
+    if [[ "$changed_file_ext" == ".css" || "$changed_file_ext" == ".js" ]]; then
+      if [[ "$changed_file_path" == "tools/input.css" || "$changed_file_path" == "webroot/sources/app.js" ]]; then
+        echo 'Frontend source changed, rebuilding CSS/JS...'
+        make tailwind
       fi
     fi
   '''
