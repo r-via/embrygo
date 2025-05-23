@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "make templ-generate && go build -o ./tmp/main ./cmd/service-app/main.go"
+  cmd = "go build -o ./tmp/main ./cmd/service-app/main.go"
   bin = "./tmp/main"
   full_bin = "./tmp/main" # Assurez-vous que full_bin est correct pour votre OS si différent
   delay = 1000 # ms

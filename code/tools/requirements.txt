@@ -1,3 +1,6 @@
 # tools/requirements.txt
 # templ-heroicons-generator>=0.2.0 # Si vous le publiez sur PyPI un jour
 git+https://github.com/r-via/templ-heroicons-generator.git
+git+https://github.com/r-via/pyt-patrol.git
+PyYAML
+rich

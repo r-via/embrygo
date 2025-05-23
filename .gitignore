@@ -27,12 +27,14 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+compiled.*
 
 # OS generated files
 .DS_Store
 Thumbs.db
 ehthumbs.db
 ._*
+__pycache__
 
 # IDE settings & metadata
 .idea/

@@ -1,12 +1,9 @@
 path: ./code
-#path: ./code/pkg/webserver
-#path: ./code/webroot/views
-#extensions: [.go]
-extensions: [.go, .templ, .js, .css, Makefile, .md]
-#extensions: [.go, .mod, .html, .css, .js, .env, .yaml, .yml, .json, .templ]
-#extensions: [.templ]
+#path: ./code/tools
+extensions: [.go, .templ, .js, .css, Makefile, .md, .air.toml]
+#extensions: [.py, .md, .yaml]
 output: embrygo
 packages: [github.com/r-via/blitzkit]
 exclude: [statics, www]
 exclude_files: [_templ.go, package-lock.json, htmx.min.js]
-gitignore:
+gitignore: .gitignore
